@@ -1,5 +1,23 @@
+import { useAuthState } from "react-firebase-hooks/auth";
+import { Center, Loader } from "@mantine/core";
+import { Navbar } from "./module/Navbar/navbar.jsx";
+import { BrowserRouter } from "react-router-dom";
+import { AppRoutes } from "./routes/AppRoutes.jsx";
+import { useContext } from "react";
+import { Context } from "./main.jsx";
 function App() {
-  return <></>;
+  const { auth } = useContext(Context);
+  const [user, loading, error] = useAuthState(auth);
+
+  if (loading) {
+    return <Loader color="blue" />;
+  }
+  return (
+    <BrowserRouter>
+      <Navbar />
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }
 
 export default App;
