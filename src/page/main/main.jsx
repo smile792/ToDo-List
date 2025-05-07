@@ -1,36 +1,57 @@
 import { Button, Checkbox, Input, Loader } from "@mantine/core";
-import { useState } from "react";
+import { useContext, useState, useMemo } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { addDoc, collection, deleteDoc, doc } from "firebase/firestore";
-import { firestore } from "../../firebase";
-import { v4 as uuidv4 } from "uuid";
-
-import Trash from "../../svg/trash.svg?react";
+import { Context } from "../../main";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 export const Main = () => {
+  const { auth, firestore } = useContext(Context);
+  const [user, userLoading] = useAuthState(auth);
   const [text, setText] = useState("");
-  const [tasks, loading] = useCollectionData(collection(firestore, "tasks"), {
-    idField: "id",
-  });
+
+  const tasksRef = useMemo(() => collection(firestore, "tasks"), [firestore]);
+
+  const tasksConverter = useMemo(
+    () => ({
+      toFirestore: (data) => data,
+      fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return { ...data, id: snapshot.id };
+      },
+    }),
+    []
+  );
+
+  const [tasks, loading, error] = useCollectionData(
+    tasksRef.withConverter(tasksConverter)
+  );
 
   const sendTask = async () => {
-    if (!text.trim()) return;
-    await addDoc(collection(firestore, "tasks"), {
-      task: text,
-      taskId: uuidv4(),
-      createdAt: new Date(),
-    });
-    setText("");
+    if (!text.trim() || !user) return;
+    try {
+      await addDoc(tasksRef, {
+        task: text,
+        taskId: user.uid,
+        createdAt: new Date(),
+      });
+      setText("");
+    } catch (err) {
+      console.error("Ошибка при добавлении задачи:", err);
+    }
   };
 
   const deleteTask = async (taskId) => {
-    const taskRef = doc(firestore, "tasks", taskId);
-    await deleteDoc(taskRef);
+    try {
+      const taskDoc = doc(firestore, "tasks", taskId);
+      await deleteDoc(taskDoc);
+    } catch (err) {
+      console.error("Ошибка при удалении задачи:", err);
+    }
   };
 
-  if (loading) {
-    return <Loader />;
-  }
+  if (loading || userLoading) return <Loader />;
+  if (error) return <div>Ошибка загрузки задач: {error.message}</div>;
 
   return (
     <div className="main">
@@ -45,25 +66,21 @@ export const Main = () => {
         </Button>
       </div>
       <div className="tasks">
-        {tasks?.map((t) => (
+        {tasks.map((t) => (
           <div
-            key={t.taskId}
+            key={t.id}
             style={{
               color: "white",
               display: "flex",
               gap: "20px",
-              cursor: "pointer",
+              alignItems: "center",
               marginBottom: "10px",
             }}
           >
             <Checkbox label={t.task} />
-            <button
-              onClick={() => {
-                deleteTask(t.taskId);
-              }}
-            >
-              ok
-            </button>
+            <Button size="xs" color="red" onClick={() => deleteTask(t.id)}>
+              Удалить
+            </Button>
           </div>
         ))}
       </div>
