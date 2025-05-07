@@ -23,7 +23,24 @@ html, body {
   flex-direction: column;
   align-items: center;
   margin-top: 10px;
+
 }
+
+.task-item {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.task-item-true {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: line-through;
+}
+
 
 .navbar {
   display: flex;

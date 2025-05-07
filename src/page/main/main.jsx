@@ -1,15 +1,24 @@
 import { Button, Checkbox, Input, Loader } from "@mantine/core";
 import { useContext, useState, useMemo } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
-import { addDoc, collection, deleteDoc, doc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  updateDoc,
+  query,
+  orderBy,
+} from "firebase/firestore";
 import { Context } from "../../main";
 import { useAuthState } from "react-firebase-hooks/auth";
+import Trash from "../../svg/trash.svg?react";
 
 export const Main = () => {
   const { auth, firestore } = useContext(Context);
   const [user, userLoading] = useAuthState(auth);
   const [text, setText] = useState("");
-
+  const [error, setError] = useState("");
   const tasksRef = useMemo(() => collection(firestore, "tasks"), [firestore]);
 
   const tasksConverter = useMemo(
@@ -23,20 +32,24 @@ export const Main = () => {
     []
   );
 
-  const [tasks, loading, error] = useCollectionData(
-    tasksRef.withConverter(tasksConverter)
+  const tasksQuery = useMemo(
+    () => query(tasksRef.withConverter(tasksConverter), orderBy("createdAt")),
+    [tasksRef]
   );
+
+  const [tasks, loading] = useCollectionData(tasksQuery);
 
   const sendTask = async () => {
     if (!text.trim() || !user) return;
     try {
       await addDoc(tasksRef, {
         task: text,
+        checked: false,
         createdAt: new Date(),
       });
       setText("");
     } catch (err) {
-      console.error("Ошибка при добавлении задачи:", err);
+      setError("Ошибка при добавлении задачи:", err);
     }
   };
 
@@ -45,8 +58,22 @@ export const Main = () => {
       const taskDoc = doc(firestore, "tasks", taskId);
       await deleteDoc(taskDoc);
     } catch (err) {
-      console.error("Ошибка при удалении задачи:", err);
+      setError("Ошибка при удалении задачи:", err);
     }
+  };
+
+  const handleCheckboxChange = async (taskId, checked) => {
+    try {
+      const taskDoc = doc(firestore, "tasks", taskId);
+      await updateDoc(taskDoc, { checked: checked });
+    } catch (err) {
+      setError("Ошибка при обновлении состояния чекбокса:", err);
+    }
+  };
+
+  const handleDeleteClick = (taskId, e) => {
+    e.stopPropagation();
+    deleteTask(taskId);
   };
 
   if (loading || userLoading) return <Loader />;
@@ -67,21 +94,25 @@ export const Main = () => {
       <div className="tasks">
         {tasks.map((t) => (
           <div
+            className={t.checked ? "task-item-true" : "task-item"}
             key={t.id}
-            style={{
-              color: "white",
-              display: "flex",
-              gap: "20px",
-              alignItems: "center",
-              marginBottom: "10px",
-            }}
           >
-            <Checkbox label={t.task} />
-            <Button size="xs" color="red" onClick={() => deleteTask(t.id)}>
-              Удалить
-            </Button>
+            <Checkbox
+              checked={t.checked || false}
+              onChange={(e) =>
+                handleCheckboxChange(t.id, e.currentTarget.checked)
+              }
+              label={t.task}
+            />
+            <span
+              style={{ cursor: "pointer" }}
+              onClick={(e) => handleDeleteClick(t.id, e)}
+            >
+              <Trash />
+            </span>
           </div>
         ))}
+        <div>{error}</div>
       </div>
     </div>
   );
