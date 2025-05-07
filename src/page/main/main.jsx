@@ -32,7 +32,6 @@ export const Main = () => {
     try {
       await addDoc(tasksRef, {
         task: text,
-        taskId: user.uid,
         createdAt: new Date(),
       });
       setText("");
