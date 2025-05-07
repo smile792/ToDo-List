@@ -1,5 +1,5 @@
 import { useAuthState } from "react-firebase-hooks/auth";
-import { Center, Loader } from "@mantine/core";
+import { Loader } from "@mantine/core";
 import { Navbar } from "./module/Navbar/navbar.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from "./routes/AppRoutes.jsx";

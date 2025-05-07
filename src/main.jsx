@@ -19,7 +19,7 @@ createRoot(document.getElementById("root")).render(
       firestore,
     }}
   >
-    <MantineProvider>
+    <MantineProvider defaultColorScheme="dark">
       <App />
     </MantineProvider>
   </Context.Provider>
