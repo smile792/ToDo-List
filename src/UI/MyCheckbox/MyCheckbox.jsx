@@ -6,6 +6,7 @@ export const MyCheckbox = ({ checked, onChange, label }) => {
       classNames={{
         body: classes.body,
         label: classes.label,
+        input: classes.input,
       }}
       checked={checked}
       onChange={onChange}

@@ -1,9 +1,7 @@
 import "./index.css";
 import "@mantine/core/styles.css";
 import { createRoot } from "react-dom/client";
-
 import { createContext } from "react";
-
 import { auth, firestore } from "./firebase.js";
 import firebase from "firebase/compat/app";
 import App from "./App.jsx";

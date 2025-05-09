@@ -1,4 +1,4 @@
-import { Button, Input, Loader } from "@mantine/core";
+import { Button, Input, Loader, Modal } from "@mantine/core";
 import { useContext, useState, useMemo } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { Context } from "../../main";
@@ -14,6 +14,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
+import { useDisclosure } from "@mantine/hooks";
 
 export const Main = () => {
   const { auth, firestore } = useContext(Context);
@@ -21,6 +22,8 @@ export const Main = () => {
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const tasksRef = useMemo(() => collection(firestore, "tasks"), [firestore]);
+  const [opened, { open, close }] = useDisclosure(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   const tasksConverter = useMemo(
     () => ({
@@ -72,14 +75,14 @@ export const Main = () => {
     }
   };
 
-  const handleDeleteClick = (taskId, e) => {
-    e.stopPropagation();
-    deleteTask(taskId);
+  const handleDeleteClick = async () => {
+    if (!taskToDelete) return;
+    await deleteTask(taskToDelete);
+    setTaskToDelete(null);
+    close();
   };
 
   if (loading || userLoading) return <Loader />;
-  if (error) return <div>Ошибка загрузки задач: {error.message}</div>;
-
   return (
     <div className="main">
       <div className="main-menu">
@@ -104,15 +107,41 @@ export const Main = () => {
                 onChange={(e) =>
                   handleCheckboxChange(t.id, e.currentTarget.checked)
                 }
-                label={t.task}
+                label={<span className="task-label">{t.task}</span>}
               />
             </div>
             <span
               className="task-icon"
-              onClick={(e) => handleDeleteClick(t.id, e)}
+              onClick={() => {
+                setTaskToDelete(t.id);
+                open();
+              }}
             >
               <Trash />
             </span>
+            <Modal
+              opened={opened}
+              onClose={() => {
+                setTaskToDelete(null);
+                close();
+              }}
+              title="Вы точно хотите удалить заметку?"
+              centered
+              overlayProps={{
+                bg: "transparent",
+              }}
+            >
+              <div className="modal-btn">
+                <Button onClick={close}>Отмена</Button>
+                <Button
+                  variant="filled"
+                  color="red"
+                  onClick={handleDeleteClick}
+                >
+                  Удалить
+                </Button>
+              </div>
+            </Modal>
           </div>
         ))}
         <div>{error}</div>
