@@ -1,10 +1,8 @@
-import { Button, Input, Loader, Modal } from "@mantine/core";
+import { Button, Input, Loader, Tabs } from "@mantine/core";
 import { useContext, useState, useMemo } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { Context } from "../../main";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { MyCheckbox } from "../../UI/MyCheckbox/MyCheckbox";
-import Trash from "../../svg/trash.svg?react";
 import {
   addDoc,
   collection,
@@ -13,17 +11,24 @@ import {
   updateDoc,
   query,
   orderBy,
+  getDoc,
 } from "firebase/firestore";
 import { useDisclosure } from "@mantine/hooks";
+import { TaskList } from "../../module/TaskList/taskList";
+import { Archive } from "./archive";
 
 export const Main = () => {
   const { auth, firestore } = useContext(Context);
   const [user, userLoading] = useAuthState(auth);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
-  const tasksRef = useMemo(() => collection(firestore, "tasks"), [firestore]);
   const [opened, { open, close }] = useDisclosure(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
+  const tasksRef = useMemo(() => collection(firestore, "tasks"), [firestore]);
+  const archivedTasksRef = useMemo(
+    () => collection(firestore, "archivedTasks"),
+    [firestore]
+  );
 
   const tasksConverter = useMemo(
     () => ({
@@ -41,19 +46,31 @@ export const Main = () => {
     [tasksRef]
   );
 
+  const archivedTasksQuery = useMemo(
+    () =>
+      query(
+        archivedTasksRef.withConverter(tasksConverter),
+        orderBy("archivedAt")
+      ),
+    [archivedTasksRef]
+  );
+
   const [tasks, loading] = useCollectionData(tasksQuery);
+  const [archivedTasks, archivedLoading] =
+    useCollectionData(archivedTasksQuery);
 
   const sendTask = async () => {
     if (!text.trim() || !user) return;
     try {
+      setText("");
       await addDoc(tasksRef, {
         task: text,
         checked: false,
         createdAt: new Date(),
       });
-      setText("");
     } catch (err) {
-      setError("Ошибка при добавлении задачи:", err);
+      console.log(err);
+      setError(`Ошибка при добавлении задачи: ${err.message}`);
     }
   };
 
@@ -62,27 +79,69 @@ export const Main = () => {
       const taskDoc = doc(firestore, "tasks", taskId);
       await deleteDoc(taskDoc);
     } catch (err) {
-      setError("Ошибка при удалении задачи:", err);
+      console.log(err);
+      setError(`Ошибка при добавлении задачи: ${err.message}`);
+    }
+  };
+
+  const deleteArchivedTask = async (taskId) => {
+    try {
+      const taskDoc = doc(firestore, "archivedTasks", taskId);
+      await deleteDoc(taskDoc);
+    } catch (err) {
+      console.log(err);
+      setError(`Ошибка при добавлении задачи: ${err.message}`);
     }
   };
 
   const handleCheckboxChange = async (taskId, checked) => {
     try {
-      const taskDoc = doc(firestore, "tasks", taskId);
-      await updateDoc(taskDoc, { checked: checked });
+      const taskDocRef = doc(firestore, "tasks", taskId);
+      const taskSnapshot = await getDoc(taskDocRef);
+      const taskData = taskSnapshot.data();
+
+      if (checked) {
+        const archivedRef = collection(firestore, "archivedTasks");
+        await addDoc(archivedRef, {
+          ...taskData,
+          checked: true,
+          archivedAt: new Date(),
+        });
+        await deleteDoc(taskDocRef);
+      } else {
+        const archivedTaskDocRef = doc(firestore, "archivedTasks", taskId);
+        const archivedTaskSnapshot = await getDoc(archivedTaskDocRef);
+        const archivedTaskData = archivedTaskSnapshot.data();
+        if (archivedTaskSnapshot.exists()) {
+          await addDoc(tasksRef, {
+            ...archivedTaskData,
+            checked: false,
+            createdAt: new Date(),
+          });
+          await deleteDoc(archivedTaskDocRef);
+        } else {
+          await updateDoc(taskDocRef, { checked: false });
+        }
+      }
     } catch (err) {
-      setError("Ошибка при обновлении состояния чекбокса:", err);
+      console.log(err);
+      setError(`Ошибка при добавлении задачи: ${err.message}`);
     }
   };
 
-  const handleDeleteClick = async () => {
+  const handleDeleteTaskClick = async () => {
     if (!taskToDelete) return;
     await deleteTask(taskToDelete);
     setTaskToDelete(null);
     close();
   };
+  const handleDeleteArchiveClick = async () => {
+    if (!taskToDelete) return;
+    await deleteArchivedTask(taskToDelete);
+    setTaskToDelete(null);
+  };
 
-  if (loading || userLoading) return <Loader />;
+  if (loading || userLoading || archivedLoading) return <Loader />;
   return (
     <div className="main">
       <div className="main-menu">
@@ -95,57 +154,35 @@ export const Main = () => {
           Добавить задачу
         </Button>
       </div>
-      <div className="tasks">
-        {tasks.map((t) => (
-          <div
-            className={t.checked ? "task-item-true" : "task-item"}
-            key={t.id}
-          >
-            <div className="task-text">
-              <MyCheckbox
-                checked={t.checked || false}
-                onChange={(e) =>
-                  handleCheckboxChange(t.id, e.currentTarget.checked)
-                }
-                label={<span className="task-label">{t.task}</span>}
-              />
-            </div>
-            <span
-              className="task-icon"
-              onClick={() => {
-                setTaskToDelete(t.id);
-                open();
-              }}
-            >
-              <Trash />
-            </span>
-            <Modal
-              opened={opened}
-              onClose={() => {
-                setTaskToDelete(null);
-                close();
-              }}
-              title="Вы точно хотите удалить заметку?"
-              centered
-              overlayProps={{
-                bg: "transparent",
-              }}
-            >
-              <div className="modal-btn">
-                <Button onClick={close}>Отмена</Button>
-                <Button
-                  variant="filled"
-                  color="red"
-                  onClick={handleDeleteClick}
-                >
-                  Удалить
-                </Button>
-              </div>
-            </Modal>
-          </div>
-        ))}
-        <div>{error}</div>
-      </div>
+
+      <Tabs defaultValue="active">
+        <Tabs.List justify="center">
+          <Tabs.Tab value="active">Активные задачи</Tabs.Tab>
+          <Tabs.Tab value="archived">Архив</Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="active">
+          <TaskList
+            tasks={tasks}
+            handleCheckboxChange={handleCheckboxChange}
+            handleDeleteTaskClick={handleDeleteTaskClick}
+            setTaskToDelete={setTaskToDelete}
+            open={open}
+            close={close}
+            opened={opened}
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value="archived">
+          <Archive
+            archivedTasks={archivedTasks}
+            handleCheckboxChange={handleCheckboxChange}
+            handleDeleteArchiveClick={handleDeleteArchiveClick}
+            setTaskToDelete={setTaskToDelete}
+          />
+        </Tabs.Panel>
+      </Tabs>
+
+      <div>{error}</div>
     </div>
   );
 };
