@@ -13,7 +13,7 @@ export const TaskList = ({
 }) => {
   return (
     <div className="tasks">
-      {tasks.map((t) => (
+      {tasks?.map((t) => (
         <div className="task-item" key={t.id}>
           <MyCheckbox
             checked={t.checked}
