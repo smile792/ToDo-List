@@ -1,7 +1,7 @@
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Loader } from "@mantine/core";
 import { Navbar } from "./module/Navbar/navbar.jsx";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 import { AppRoutes } from "./routes/AppRoutes.jsx";
 import { useContext } from "react";
 import { Context } from "./main.jsx";
@@ -13,10 +13,10 @@ function App() {
     return <Loader color="blue" />;
   }
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Navbar />
       <AppRoutes />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
