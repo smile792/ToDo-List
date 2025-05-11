@@ -2,6 +2,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { MyCheckbox } from "../../UI/MyCheckbox/MyCheckbox";
 import Trash from "../../svg/trash.svg?react";
 import { Button, Modal } from "@mantine/core";
+import { useState } from "react";
 
 export const Archive = ({
   archivedTasks,
@@ -10,16 +11,24 @@ export const Archive = ({
   setTaskToDelete,
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
+  const [archivedTask, setArchivedTask] = useState("false");
 
   return (
     <div className="tasks">
       {archivedTasks?.map((t) => (
-        <div className="task-item-true" key={t.id}>
+        <div
+          className={`task-item ${
+            archivedTask === t.id ? "active" : "default"
+          }`}
+          key={t.id}
+        >
           <MyCheckbox
             checked={t.checked || false}
-            onChange={(e) =>
-              handleCheckboxChange(t.id, e.currentTarget.checked)
-            }
+            onChange={async (e) => {
+              setArchivedTask(t.id);
+              await handleCheckboxChange(t.id, e.currentTarget.checked);
+              setArchivedTask("");
+            }}
             label={t.task}
           />
           <span

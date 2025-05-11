@@ -1,25 +1,31 @@
 import { Modal, Button } from "@mantine/core";
 import Trash from "../../svg/trash.svg?react";
 import { MyCheckbox } from "../../UI/MyCheckbox/MyCheckbox";
+import { useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
 
 export const TaskList = ({
   tasks,
   handleCheckboxChange,
   handleDeleteTaskClick,
   setTaskToDelete,
-  open,
-  close,
-  opened,
 }) => {
+  const [opened, { open, close }] = useDisclosure(false);
+  const [archivedTask, setArchivedTask] = useState("false");
   return (
     <div className="tasks">
       {tasks?.map((t) => (
-        <div className="task-item" key={t.id}>
+        <div
+          className={`task-item ${archivedTask === t.id ? "archiving" : ""}`}
+          key={t.id}
+        >
           <MyCheckbox
             checked={t.checked}
-            onChange={(e) =>
-              handleCheckboxChange(t.id, e.currentTarget.checked)
-            }
+            onChange={async (e) => {
+              setArchivedTask(t.id);
+              await handleCheckboxChange(t.id, e.currentTarget.checked);
+              setArchivedTask("");
+            }}
             label={t.task}
           />
           <span
@@ -44,7 +50,13 @@ export const TaskList = ({
       >
         <div className="modal-btn">
           <Button onClick={close}>Отмена</Button>
-          <Button color="red" onClick={handleDeleteTaskClick}>
+          <Button
+            color="red"
+            onClick={() => {
+              handleDeleteTaskClick();
+              close();
+            }}
+          >
             Удалить
           </Button>
         </div>

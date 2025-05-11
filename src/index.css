@@ -29,11 +29,22 @@
   margin-top: 10px;
   padding: 4px;
   background-color: #454649;
+  transition: all 0.3s ease;
   border-radius: 5px;
   color: white;
 }
 
-.task-item-true {
+.task-item.archiving {
+  opacity: 0;
+  transform: translateX(50px);
+}
+
+.task-item.active {
+  opacity: 0;
+  transform: translateX(-50px);
+}
+
+.task-item.default {
   opacity: 0.6;
   text-decoration-line: line-through;
 }

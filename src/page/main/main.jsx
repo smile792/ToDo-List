@@ -14,7 +14,6 @@ import {
   getDoc,
   where,
 } from "firebase/firestore";
-import { useDisclosure } from "@mantine/hooks";
 import { TaskList } from "../../module/TaskList/taskList";
 import { Archive } from "./archive";
 
@@ -23,7 +22,6 @@ export const Main = () => {
   const [user, userLoading] = useAuthState(auth);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
-  const [opened, { open, close }] = useDisclosure(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
 
   const tasksRef = useMemo(() => collection(firestore, "tasks"), [firestore]);
@@ -109,33 +107,24 @@ export const Main = () => {
 
   const handleCheckboxChange = async (taskId, checked) => {
     try {
-      const taskDocRef = doc(firestore, "tasks", taskId);
-      const taskSnapshot = await getDoc(taskDocRef);
-      const taskData = taskSnapshot.data();
+      const fromCollection = checked ? "tasks" : "archivedTasks";
+      const toCollection = checked ? "archivedTasks" : "tasks";
 
-      if (checked) {
-        const archivedRef = collection(firestore, "archivedTasks");
-        await addDoc(archivedRef, {
-          ...taskData,
-          checked: true,
-          archivedAt: new Date(),
-        });
-        await deleteDoc(taskDocRef);
-      } else {
-        const archivedTaskDocRef = doc(firestore, "archivedTasks", taskId);
-        const archivedTaskSnapshot = await getDoc(archivedTaskDocRef);
-        const archivedTaskData = archivedTaskSnapshot.data();
-        if (archivedTaskSnapshot.exists()) {
-          await addDoc(tasksRef, {
-            ...archivedTaskData,
-            checked: false,
-            createdAt: new Date(),
-          });
-          await deleteDoc(archivedTaskDocRef);
-        } else {
-          await updateDoc(taskDocRef, { checked: false });
-        }
-      }
+      const sourceDocRef = doc(firestore, fromCollection, taskId);
+      const sourceSnapshot = await getDoc(sourceDocRef);
+
+      const taskData = sourceSnapshot.data();
+
+      const newTaskData = {
+        ...taskData,
+        checked,
+        [checked ? "archivedAt" : "createdAt"]: new Date(),
+      };
+
+      const toCollectionRef = collection(firestore, toCollection);
+      await addDoc(toCollectionRef, newTaskData);
+
+      await deleteDoc(sourceDocRef);
     } catch (err) {
       setError(`Ошибка при обновлении задачи: ${err.message}`);
     }
@@ -145,7 +134,6 @@ export const Main = () => {
     if (!taskToDelete) return;
     await deleteTask(taskToDelete);
     setTaskToDelete(null);
-    close();
   };
 
   const handleDeleteArchiveClick = async () => {
@@ -179,9 +167,6 @@ export const Main = () => {
             handleCheckboxChange={handleCheckboxChange}
             handleDeleteTaskClick={handleDeleteTaskClick}
             setTaskToDelete={setTaskToDelete}
-            open={open}
-            close={close}
-            opened={opened}
           />
         </Tabs.Panel>
         <Tabs.Panel value="archived">
