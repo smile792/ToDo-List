@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDsZLX2T6x3f8XFdIUtabn-04j5dudY9h4",
+  apiKey: import.meta.env.VITE_APIKEY,
   authDomain: "todo-list-20d1d.firebaseapp.com",
   projectId: "todo-list-20d1d",
   storageBucket: "todo-list-20d1d.firebasestorage.app",
