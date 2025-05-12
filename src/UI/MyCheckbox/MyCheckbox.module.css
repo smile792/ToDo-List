@@ -4,10 +4,8 @@
 }
 
 .label {
-    display: flex;
-    align-items: center;
     word-break: break-word;
-    transition: color 0.4s ease, opacity 0.4s ease;
+    pointer-events: none;
 }
 
 .input {

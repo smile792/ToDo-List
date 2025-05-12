@@ -12,6 +12,7 @@ import {
   orderBy,
   getDoc,
   where,
+  updateDoc,
 } from "firebase/firestore";
 import { TaskList } from "../../module/TaskList/taskList";
 import { Archive } from "./archive";
@@ -21,8 +22,9 @@ export const Main = () => {
   const [user, userLoading] = useAuthState(auth);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
-  const [taskToDelete, setTaskToDelete] = useState(null);
-
+  const [taskToDelete, setTaskToDelete] = useState("");
+  const [editTaskId, setEditTaskId] = useState("");
+  const [editTaskText, setEditTaskText] = useState("");
   const tasksRef = useMemo(() => collection(firestore, "tasks"), [firestore]);
   const archivedTasksRef = useMemo(
     () => collection(firestore, "archivedTasks"),
@@ -119,7 +121,6 @@ export const Main = () => {
         checked,
         [checked ? "archivedAt" : "createdAt"]: new Date(),
       };
-
       const toCollectionRef = collection(firestore, toCollection);
       await addDoc(toCollectionRef, newTaskData);
 
@@ -130,17 +131,29 @@ export const Main = () => {
   };
 
   const handleDeleteTaskClick = async () => {
-    if (!taskToDelete) return;
     await deleteTask(taskToDelete);
-    setTaskToDelete(null);
+    setTaskToDelete("");
   };
 
   const handleDeleteArchiveClick = async () => {
-    if (!taskToDelete) return;
     await deleteArchivedTask(taskToDelete);
-    setTaskToDelete(null);
+    setTaskToDelete("");
   };
 
+  const editTask = async (taskId, newTask) => {
+    try {
+      const editTaskRef = doc(firestore, "tasks", taskId);
+      await updateDoc(editTaskRef, { task: newTask });
+    } catch (err) {
+      console.log(err);
+      setError(`Ошибка при обновлении задачи: ${err.message}`);
+    }
+  };
+  const handleEditTask = async () => {
+    await editTask(editTaskId, editTaskText);
+    setEditTaskId("");
+    setEditTaskText("");
+  };
   if (!user || userLoading || loading || archivedLoading) return <Loader />;
 
   return (
@@ -166,6 +179,10 @@ export const Main = () => {
             handleCheckboxChange={handleCheckboxChange}
             handleDeleteTaskClick={handleDeleteTaskClick}
             setTaskToDelete={setTaskToDelete}
+            setEditTaskId={setEditTaskId}
+            editTaskText={editTaskText}
+            setEditTaskText={setEditTaskText}
+            handleEditTask={handleEditTask}
           />
         </Tabs.Panel>
         <Tabs.Panel value="archived">

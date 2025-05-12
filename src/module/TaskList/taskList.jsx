@@ -1,5 +1,6 @@
-import { Modal, Button } from "@mantine/core";
 import Trash from "../../svg/trash.svg?react";
+import Pencil from "../../svg/pencil.svg?react";
+import { Modal, Button, TextInput } from "@mantine/core";
 import { MyCheckbox } from "../../UI/MyCheckbox/MyCheckbox";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
@@ -9,8 +10,14 @@ export const TaskList = ({
   handleCheckboxChange,
   handleDeleteTaskClick,
   setTaskToDelete,
+  setEditTaskId,
+  handleEditTask,
+  editTaskText,
+  setEditTaskText,
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
+  const [openedEdit, { open: openEdit, close: closeEdit }] =
+    useDisclosure(false);
   const [archivedTask, setArchivedTask] = useState("false");
   return (
     <div className="tasks">
@@ -28,15 +35,29 @@ export const TaskList = ({
             }}
             label={t.task}
           />
-          <span
-            className="task-icon"
-            onClick={() => {
-              setTaskToDelete(t.id);
-              open();
-            }}
-          >
-            <Trash />
-          </span>
+          <div className="task-icon">
+            <span
+              className="task-icon-pencil"
+              title="Редактировать"
+              onClick={async () => {
+                await setEditTaskId(t.id);
+                setEditTaskText(t.task);
+                openEdit();
+              }}
+            >
+              <Pencil />
+            </span>
+            <span
+              title="Удалить"
+              className="task-icon-trash"
+              onClick={() => {
+                setTaskToDelete(t.id);
+                open();
+              }}
+            >
+              <Trash />
+            </span>
+          </div>
         </div>
       ))}
 
@@ -58,6 +79,31 @@ export const TaskList = ({
             }}
           >
             Удалить
+          </Button>
+        </div>
+      </Modal>
+      <Modal
+        opened={openedEdit}
+        onClose={closeEdit}
+        title="Редактировать задачу"
+        overlayProps={{
+          bg: "transparent",
+        }}
+      >
+        <TextInput
+          value={editTaskText}
+          onChange={(e) => setEditTaskText(e.currentTarget.value)}
+        />
+        <div className="modal-btn edit">
+          <Button onClick={closeEdit}>Отмена</Button>
+          <Button
+            color="green"
+            onClick={() => {
+              handleEditTask();
+              closeEdit();
+            }}
+          >
+            Подтвердить
           </Button>
         </div>
       </Modal>

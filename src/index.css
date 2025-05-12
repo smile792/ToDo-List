@@ -52,6 +52,7 @@
 .task-icon {
   display: flex;
   cursor: pointer;
+  gap: 2px;
 }
 
 .navbar {
@@ -79,4 +80,8 @@
 .modal-btn {
   display: flex;
   justify-content: space-between;
+}
+
+.edit {
+  padding-top: 10px;
 }

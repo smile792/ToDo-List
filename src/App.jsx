@@ -13,10 +13,10 @@ function App() {
     return <Loader color="blue" />;
   }
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Navbar />
       <AppRoutes />
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
