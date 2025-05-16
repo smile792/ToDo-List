@@ -1,4 +1,4 @@
-import { Button, Input, Loader, Tabs } from "@mantine/core";
+import { Loader } from "@mantine/core";
 import { useContext, useState, useMemo } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { Context } from "../../main";
@@ -14,8 +14,8 @@ import {
   where,
   updateDoc,
 } from "firebase/firestore";
-import { TaskList } from "../../module/TaskList/taskList";
-import { Archive } from "./archive";
+import { MainMenu } from "../../module/MainMenu/mainMenu";
+import { MainTasks } from "../../module/TabsMain/tabsMain";
 
 export const Main = () => {
   const { auth, firestore } = useContext(Context);
@@ -158,42 +158,23 @@ export const Main = () => {
 
   return (
     <div className="main">
-      <div className="main-menu">
-        <Input
-          placeholder="Напиши свою задачу"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <Button variant="filled" size="xs" onClick={sendTask}>
-          Добавить задачу
-        </Button>
-      </div>
-      <Tabs defaultValue="active">
-        <Tabs.List justify="center">
-          <Tabs.Tab value="active">Активные задачи</Tabs.Tab>
-          <Tabs.Tab value="archived">Архив</Tabs.Tab>
-        </Tabs.List>
-        <Tabs.Panel value="active">
-          <TaskList
-            tasks={tasks}
-            handleCheckboxChange={handleCheckboxChange}
-            handleDeleteTaskClick={handleDeleteTaskClick}
-            setTaskToDelete={setTaskToDelete}
-            setEditTaskId={setEditTaskId}
-            editTaskText={editTaskText}
-            setEditTaskText={setEditTaskText}
-            handleEditTask={handleEditTask}
-          />
-        </Tabs.Panel>
-        <Tabs.Panel value="archived">
-          <Archive
-            archivedTasks={archivedTasks}
-            handleCheckboxChange={handleCheckboxChange}
-            handleDeleteArchiveClick={handleDeleteArchiveClick}
-            setTaskToDelete={setTaskToDelete}
-          />
-        </Tabs.Panel>
-      </Tabs>
+      <MainMenu
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onClick={sendTask}
+      />
+      <MainTasks
+        tasks={tasks}
+        handleCheckboxChange={handleCheckboxChange}
+        handleDeleteTaskClick={handleDeleteTaskClick}
+        setTaskToDelete={setTaskToDelete}
+        setEditTaskId={setEditTaskId}
+        editTaskText={editTaskText}
+        setEditTaskText={setEditTaskText}
+        handleEditTask={handleEditTask}
+        archivedTasks={archivedTasks}
+        handleDeleteArchiveClick={handleDeleteArchiveClick}
+      />
       <div>{error}</div>
     </div>
   );
