@@ -7,6 +7,7 @@ import { useState } from "react";
 
 export const TaskList = ({
   tasks,
+  filtered,
   handleCheckboxChange,
   handleDeleteTaskClick,
   setTaskToDelete,
@@ -21,45 +22,47 @@ export const TaskList = ({
   const [archivedTask, setArchivedTask] = useState("false");
   return (
     <div className="tasks">
-      {tasks?.map((t) => (
-        <div
-          className={`task-item ${archivedTask === t.id ? "archiving" : ""}`}
-          key={t.id}
-        >
-          <MyCheckbox
-            checked={t.checked}
-            onChange={async (e) => {
-              setArchivedTask(t.id);
-              await handleCheckboxChange(t.id, e.currentTarget.checked);
-              setArchivedTask("");
-            }}
-            label={t.task}
-          />
-          <div className="task-icon">
-            <span
-              className="task-icon-pencil"
-              title="Редактировать"
-              onClick={async () => {
-                await setEditTaskId(t.id);
-                setEditTaskText(t.task);
-                openEdit();
+      {tasks
+        ?.filter((key) => filtered.includes(key.task))
+        .map((t) => (
+          <div
+            className={`task-item ${archivedTask === t.id ? "archiving" : ""}`}
+            key={t.id}
+          >
+            <MyCheckbox
+              checked={t.checked}
+              onChange={async (e) => {
+                setArchivedTask(t.id);
+                await handleCheckboxChange(t.id, e.currentTarget.checked);
+                setArchivedTask("");
               }}
-            >
-              <Pencil />
-            </span>
-            <span
-              title="Удалить"
-              className="task-icon-trash"
-              onClick={() => {
-                setTaskToDelete(t.id);
-                open();
-              }}
-            >
-              <Trash />
-            </span>
+              label={t.task}
+            />
+            <div className="task-icon">
+              <span
+                className="task-icon-pencil"
+                title="Редактировать"
+                onClick={async () => {
+                  await setEditTaskId(t.id);
+                  setEditTaskText(t.task);
+                  openEdit();
+                }}
+              >
+                <Pencil />
+              </span>
+              <span
+                title="Удалить"
+                className="task-icon-trash"
+                onClick={() => {
+                  setTaskToDelete(t.id);
+                  open();
+                }}
+              >
+                <Trash />
+              </span>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
 
       <Modal
         opened={opened}

@@ -1,5 +1,5 @@
-import { Loader } from "@mantine/core";
-import { useContext, useState, useMemo } from "react";
+import { keys, Loader } from "@mantine/core";
+import { useContext, useState, useMemo, useEffect } from "react";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { Context } from "../../main";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -25,6 +25,11 @@ export const Main = () => {
   const [taskToDelete, setTaskToDelete] = useState("");
   const [editTaskId, setEditTaskId] = useState("");
   const [editTaskText, setEditTaskText] = useState("");
+  const [filteredTask, setFilteredTask] = useState("");
+
+  const handleFilterUpdate = useMemo(() => (filtered) => {
+    setFilteredTask(filtered);
+  });
   const tasksRef = useMemo(() => collection(firestore, "tasks"), [firestore]);
   const archivedTasksRef = useMemo(
     () => collection(firestore, "archivedTasks"),
@@ -67,7 +72,6 @@ export const Main = () => {
   const [tasks, loading] = useCollectionData(tasksQuery);
   const [archivedTasks, archivedLoading] =
     useCollectionData(archivedTasksQuery);
-
   const sendTask = async () => {
     if (!text.trim()) {
       setError("Задача не может быть пустой");
@@ -154,6 +158,12 @@ export const Main = () => {
     setEditTaskId("");
     setEditTaskText("");
   };
+  const allTasks = useMemo(() => {
+    const active = (tasks || []).map((t) => t.task);
+    const archived = (archivedTasks || []).map((t) => t.task);
+    return [...active, ...archived];
+  }, [tasks, archivedTasks]);
+
   if (!user || userLoading || loading || archivedLoading) return <Loader />;
 
   return (
@@ -162,9 +172,12 @@ export const Main = () => {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onClick={sendTask}
+        allTasks={allTasks}
+        onFiltered={handleFilterUpdate}
       />
       <MainTasks
         tasks={tasks}
+        filtered={filteredTask}
         handleCheckboxChange={handleCheckboxChange}
         handleDeleteTaskClick={handleDeleteTaskClick}
         setTaskToDelete={setTaskToDelete}

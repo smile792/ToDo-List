@@ -5,6 +5,7 @@ import { Button, Modal } from "@mantine/core";
 import { useState } from "react";
 
 export const Archive = ({
+  filtered,
   archivedTasks,
   handleCheckboxChange,
   handleDeleteArchiveClick,
@@ -12,36 +13,37 @@ export const Archive = ({
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [archivedTask, setArchivedTask] = useState("false");
-
   return (
     <div className="tasks">
-      {archivedTasks?.map((t) => (
-        <div
-          className={`task-item ${
-            archivedTask === t.id ? "active" : "default"
-          }`}
-          key={t.id}
-        >
-          <MyCheckbox
-            checked={t.checked || false}
-            onChange={async (e) => {
-              setArchivedTask(t.id);
-              await handleCheckboxChange(t.id, e.currentTarget.checked);
-              setArchivedTask("");
-            }}
-            label={t.task}
-          />
-          <span
-            className="task-icon"
-            onClick={() => {
-              setTaskToDelete(t.id);
-              open();
-            }}
+      {archivedTasks
+        ?.filter((key) => filtered.includes(key.task))
+        .map((t) => (
+          <div
+            className={`task-item ${
+              archivedTask === t.id ? "active" : "default"
+            }`}
+            key={t.id}
           >
-            <Trash />
-          </span>
-        </div>
-      ))}
+            <MyCheckbox
+              checked={t.checked || false}
+              onChange={async (e) => {
+                setArchivedTask(t.id);
+                await handleCheckboxChange(t.id, e.currentTarget.checked);
+                setArchivedTask("");
+              }}
+              label={t.task}
+            />
+            <span
+              className="task-icon"
+              onClick={() => {
+                setTaskToDelete(t.id);
+                open();
+              }}
+            >
+              <Trash />
+            </span>
+          </div>
+        ))}
       <Modal
         opened={opened}
         onClose={() => {

@@ -1,0 +1,4 @@
+.input::placeholder {
+    color: rgb(219, 217, 217);
+    font-size: small;
+}

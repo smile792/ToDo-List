@@ -4,6 +4,7 @@ import { Archive } from "../../page/main/archive";
 
 export const MainTasks = ({
   tasks,
+  filtered,
   handleDeleteTaskClick,
   setTaskToDelete,
   setEditTaskId,
@@ -23,6 +24,7 @@ export const MainTasks = ({
       <Tabs.Panel value="active">
         <TaskList
           tasks={tasks}
+          filtered={filtered}
           handleCheckboxChange={handleCheckboxChange}
           handleDeleteTaskClick={handleDeleteTaskClick}
           setTaskToDelete={setTaskToDelete}
@@ -34,6 +36,7 @@ export const MainTasks = ({
       </Tabs.Panel>
       <Tabs.Panel value="archived">
         <Archive
+          filtered={filtered}
           archivedTasks={archivedTasks}
           handleCheckboxChange={handleCheckboxChange}
           handleDeleteArchiveClick={handleDeleteArchiveClick}
