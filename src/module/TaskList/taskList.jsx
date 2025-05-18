@@ -5,17 +5,18 @@ import { MyCheckbox } from "../../UI/MyCheckbox/MyCheckbox";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 
-export const TaskList = ({
-  tasks,
-  filtered,
-  handleCheckboxChange,
-  handleDeleteTaskClick,
-  setTaskToDelete,
-  setEditTaskId,
-  handleEditTask,
-  editTaskText,
-  setEditTaskText,
-}) => {
+export const TaskList = (props) => {
+  const {
+    tasks,
+    filtered,
+    handleCheckboxChange,
+    handleDeleteTaskClick,
+    setTaskToDelete,
+    setEditTaskId,
+    handleEditTask,
+    editTaskText,
+    setEditTaskText,
+  } = props;
   const [opened, { open, close }] = useDisclosure(false);
   const [openedEdit, { open: openEdit, close: closeEdit }] =
     useDisclosure(false);

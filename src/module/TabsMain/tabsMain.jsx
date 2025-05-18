@@ -2,19 +2,20 @@ import { Tabs } from "@mantine/core";
 import { TaskList } from "../TaskList/taskList";
 import { Archive } from "../../page/main/archive";
 
-export const MainTasks = ({
-  tasks,
-  filtered,
-  handleDeleteTaskClick,
-  setTaskToDelete,
-  setEditTaskId,
-  editTaskText,
-  setEditTaskText,
-  handleEditTask,
-  archivedTasks,
-  handleCheckboxChange,
-  handleDeleteArchiveClick,
-}) => {
+export const MainTasks = (props) => {
+  const {
+    tasks,
+    filtered,
+    handleDeleteTaskClick,
+    setTaskToDelete,
+    setEditTaskId,
+    editTaskText,
+    setEditTaskText,
+    handleEditTask,
+    archivedTasks,
+    handleCheckboxChange,
+    handleDeleteArchiveClick,
+  } = props;
   return (
     <Tabs defaultValue="active">
       <Tabs.List justify="center">
