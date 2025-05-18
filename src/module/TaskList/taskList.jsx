@@ -27,11 +27,7 @@ export const TaskList = (props) => {
     const taskDoc = doc(firestore, "tasks", taskId);
     await updateDoc(taskDoc, { priority: value });
   };
-  const handleSetTask = async () => {
-    await setEditTaskId(t.id);
-    setEditTaskText(t.task);
-    openEdit();
-  };
+  const handleSetTask = async () => {};
   const getPriorityClass = (priority) => {
     switch (priority) {
       case "1":
@@ -64,7 +60,11 @@ export const TaskList = (props) => {
                 <span
                   className="task-icon-pencil"
                   title="Редактировать"
-                  onClick={handleSetTask}
+                  onClick={async () => {
+                    await setEditTaskId(t.id);
+                    setEditTaskText(t.task);
+                    openEdit();
+                  }}
                 >
                   <Pencil />
                 </span>
