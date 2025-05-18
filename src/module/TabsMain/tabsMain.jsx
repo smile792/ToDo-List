@@ -15,6 +15,7 @@ export const MainTasks = (props) => {
     archivedTasks,
     handleCheckboxChange,
     handleDeleteArchiveClick,
+    firestore,
   } = props;
   return (
     <Tabs defaultValue="active">
@@ -26,6 +27,7 @@ export const MainTasks = (props) => {
         <TaskList
           tasks={tasks}
           filtered={filtered}
+          firestore={firestore}
           handleCheckboxChange={handleCheckboxChange}
           handleDeleteTaskClick={handleDeleteTaskClick}
           setTaskToDelete={setTaskToDelete}

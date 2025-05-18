@@ -13,6 +13,7 @@ const tasksConverter = {
       createdAt: data.createdAt || null,
       uid: data.uid || null,
       archivedAt: data.archivedAt || null,
+      priority: data.priority || null,
     };
   },
 };

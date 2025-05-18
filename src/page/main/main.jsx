@@ -8,13 +8,14 @@ import {
   collection,
   deleteDoc,
   doc,
+  query,
+  orderBy,
   getDoc,
+  where,
   updateDoc,
 } from "firebase/firestore";
 import { MainMenu } from "../../module/MainMenu/mainMenu";
 import { MainTasks } from "../../module/TabsMain/tabsMain";
-import { useQuery, useTaskRef } from "../../hooks/hooks";
-import { DeleteTask } from "../../utils/utils";
 
 export const Main = () => {
   const { auth, firestore } = useContext(Context);
@@ -29,11 +30,45 @@ export const Main = () => {
   const handleFilterUpdate = useMemo(() => (filtered) => {
     setFilteredTask(filtered);
   });
-  const tasksRef = useTaskRef(firestore, "tasks");
-  const archivedTasksRef = useTaskRef(firestore, "archivedTasks");
+  const tasksRef = useMemo(() => collection(firestore, "tasks"), [firestore]);
+  const archivedTasksRef = useMemo(
+    () => collection(firestore, "archivedTasks"),
+    [firestore]
+  );
 
-  const tasksQuery = useQuery(auth, tasksRef, "createdAt");
-  const archivedTasksQuery = useQuery(auth, archivedTasksRef, "archivedAt");
+  const tasksConverter = {
+    toFirestore: (data) => data,
+    fromFirestore: (snapshot, options) => {
+      const data = snapshot.data(options);
+      return {
+        id: snapshot.id,
+        task: data.task || "",
+        checked: data.checked || false,
+        createdAt: data.createdAt || null,
+        uid: data.uid || null,
+        archivedAt: data.archivedAt || null,
+        priority: data.priority || null,
+      };
+    },
+  };
+
+  const tasksQuery = useMemo(() => {
+    if (!user) return null;
+    return query(
+      tasksRef.withConverter(tasksConverter),
+      where("uid", "==", user.uid),
+      orderBy("createdAt")
+    );
+  }, [tasksRef, user]);
+
+  const archivedTasksQuery = useMemo(() => {
+    if (!user) return null;
+    return query(
+      archivedTasksRef.withConverter(tasksConverter),
+      where("uid", "==", user.uid),
+      orderBy("archivedAt")
+    );
+  }, [archivedTasksRef, user]);
 
   const [tasks, loading] = useCollectionData(tasksQuery);
   const [archivedTasks, archivedLoading] =
@@ -58,22 +93,34 @@ export const Main = () => {
     }
   };
 
-  const handleDeleteTaskClick = async () => {
-    await DeleteTask(firestore, "tasks", taskToDelete);
-    setTaskToDelete("");
+  const deleteTask = async (taskId) => {
+    try {
+      const taskDoc = doc(firestore, "tasks", taskId);
+      await deleteDoc(taskDoc);
+    } catch (err) {
+      setError(`Ошибка при удалении задачи: ${err.message}`);
+    }
   };
 
-  const handleDeleteArchiveClick = async () => {
-    await DeleteTask(firestore, "archivedTasks", taskToDelete);
-    setTaskToDelete("");
+  const deleteArchivedTask = async (taskId) => {
+    try {
+      const taskDoc = doc(firestore, "archivedTasks", taskId);
+      await deleteDoc(taskDoc);
+    } catch (err) {
+      setError(`Ошибка при удалении задачи: ${err.message}`);
+    }
   };
+
   const handleCheckboxChange = async (taskId, checked) => {
     try {
       const fromCollection = checked ? "tasks" : "archivedTasks";
       const toCollection = checked ? "archivedTasks" : "tasks";
+
       const sourceDocRef = doc(firestore, fromCollection, taskId);
       const sourceSnapshot = await getDoc(sourceDocRef);
+
       const taskData = sourceSnapshot.data();
+
       const newTaskData = {
         ...taskData,
         checked,
@@ -86,6 +133,16 @@ export const Main = () => {
     } catch (err) {
       setError(`Ошибка при обновлении задачи: ${err.message}`);
     }
+  };
+
+  const handleDeleteTaskClick = async () => {
+    await deleteTask(taskToDelete);
+    setTaskToDelete("");
+  };
+
+  const handleDeleteArchiveClick = async () => {
+    await deleteArchivedTask(taskToDelete);
+    setTaskToDelete("");
   };
 
   const editTask = async (taskId, newTask) => {
@@ -121,6 +178,7 @@ export const Main = () => {
       />
       <MainTasks
         tasks={tasks}
+        firestore={firestore}
         filtered={filteredTask}
         handleCheckboxChange={handleCheckboxChange}
         handleDeleteTaskClick={handleDeleteTaskClick}

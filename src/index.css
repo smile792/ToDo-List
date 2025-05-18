@@ -17,10 +17,28 @@
 .tasks {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   margin-top: 10px;
 }
+
+.task-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.task-item.priority-high {
+  background-color: red;
+}
+
+.task-item.priority-medium {
+  background-color: rgb(184, 184, 12);
+}
+
+.task-item.priority-low {
+  background-color: green
+}
+
 
 .task-item,
 .task-item-true {
@@ -36,10 +54,8 @@
   color: white;
 }
 
-.task-item.archiving {
-  opacity: 0;
-  transform: translateX(50px);
-}
+
+
 
 .task-item.active {
   opacity: 0;
